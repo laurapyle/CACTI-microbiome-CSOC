@@ -14,6 +14,7 @@ library(purrr)
 library(readr)
 library(tableone)
 library(Hmisc)
+library(labelled)
 
 # read in raw data
 cat <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report\\Data\\Blinded category.csv")
@@ -59,6 +60,9 @@ alldata <- alldata[!is.na(alldata$StudyID),]
 alldata <- alldata[alldata$Group.Status=="A" | alldata$Group.Status=="B",]
 alldata$Group.Status <- factor(alldata$Group.Status)
 
+# some people have 0 values for BD, set to missing
+alldata$BA_Distensibilty[alldata$BA_Distensibilty==0] <- NA
+
 # get rid of people missing all data 
 alldata <- alldata[!is.na(alldata$C_Ap) | !is.na(alldata$C_Ph) | !is.na(alldata$C_Agph) | !is.na(alldata$MeanHeartRate) |
                      !is.na(alldata$MeanPulseWaveVelocity) | !is.na(alldata$BA_Distensibilty) | !is.na(alldata$cIMT),]
@@ -73,11 +77,15 @@ n_BD <- nrow(alldata[!is.na(alldata$BA_Distensibilty),])
 n_cIMT <- nrow(alldata[!is.na(alldata$cIMT),])
 
 # labels
-#label(alldata$MeanHeartRate)="Mean HR (bpm)"
+var_label(alldata$cIMT)="cIMT (mm)"
+var_label(alldata$C_Ap)="Augmented Pressure (mmHg)"
+var_label(alldata$C_Agph)="Augmentation Index (%)"
+var_label(alldata$BA_Distensibilty)="Brachial Distensibility (%/mmHg)"
+var_label(alldata$MeanPulseWaveVelocity)="Pulse Wave Velocity (m/s)"
 
-myvars <- c("C_Ap","C_Ph","C_Agph","MeanHeartRate","MeanPulseWaveVelocity","BA_Distensibilty","cIMT")
+myvars <- c("C_Ap","C_Agph","MeanPulseWaveVelocity","BA_Distensibilty","cIMT")
 tab <- CreateTableOne(vars=myvars, strata="Group.Status",data=alldata, test=FALSE)
-
+tab <- print(tab,varLabels=TRUE)
 
 ```
 
@@ -87,12 +95,14 @@ The CACTI Study Clinical Study Oversight Committee (CSOC) is concerned that ther
 
 # Methods
 
-The CVD outcomes data were provided to the blinded statistician, along with blinded group memberships.  Participants with at least one CVD measure were included in this report.  Participants were stratified by group and descriptive statistics were calculated.
+The CVD outcomes data were provided to the blinded statistician, along with blinded group memberships.  Participants with at least one CVD measure were included in this report.  For cIMT, the maximum of the left and right sides was used in analysis.  For pulse wave velocity, Augmentation Index, augmented pressure, and brachial distensitiblity, the mean of a participant's multiple measures was used in analysis.
+
+Participants were stratified by group and descriptive statistics were calculated.
 
 # Results
 
 Table 1 provides descriptive statistics for the CVD measures, by blinded study group.
 
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
-kableone(tab,caption="Table 1.  Descriptive statistics for CVD measures, by blinded study group.  Statistics given are mean±SD.")
+kableone(tab,caption="Table 1.  Descriptive statistics for CVD measures, by blinded study group.")
 ```

@@ -1,3 +1,5 @@
 
 CVD_measures.docx
 *.csv
+*.docx
+.Rhistory
