@@ -16,23 +16,15 @@ library(tableone)
 library(Hmisc)
 library(labelled)
 
-# read in raw data
-cat <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\Blinded category.csv")
-pwa <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\PWA.csv")
-pwv <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\PWV.csv")
-cIMT <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\cIMT.csv")
-BrachD <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\BrachD.csv")
+# read in Janet's combined file
+alldata <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\QOMBE_Blinded.csv")
 
 # clean up extra rows
-cat <- cat[!is.na(cat$StudyID),] 
-pwa <- pwa[!is.na(pwa$StudyID),]
-pwv <- pwv[!is.na(pwv$StudyID),]
-cIMT <- cIMT[!is.na(cIMT$StudyID),]
-BrachD <- BrachD[!is.na(BrachD$StudyID),]
+alldata <- alldata[!is.na(alldata$StudyID),] 
 
 # for cIMT, take largest of left and right mean, unless only one side
-for (i in 1:nrow(cIMT)) {
-  cIMT$cIMT[i] <- ifelse(is.na(cIMT$CIMT_LeftMean[i]) & is.na(cIMT$CIMT_RightMean[i]),NA,max(cIMT$CIMT_LeftMean[i],cIMT$CIMT_RightMean[i],na.rm = TRUE))
+for (i in 1:nrow(alldata)) {
+  alldata$cIMT[i] <- ifelse(is.na(alldata$CIMT_LeftMean[i]) & is.na(alldata$CIMT_RightMean[i]),NA,max(alldata$CIMT_LeftMean[i],alldata$CIMT_RightMean[i],na.rm = TRUE))
 }
 
 # for PWV, PWA, BD, average per person
