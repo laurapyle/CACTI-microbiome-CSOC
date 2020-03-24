@@ -17,7 +17,7 @@ library(Hmisc)
 library(labelled)
 
 # read in Janet's combined file
-alldata <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\QOMBE_Blinded.csv")
+alldata <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\QOMBE_Blinded32320.csv")
 
 # clean up extra rows
 alldata <- alldata[!is.na(alldata$StudyID),] 
@@ -27,61 +27,41 @@ for (i in 1:nrow(alldata)) {
   alldata$cIMT[i] <- ifelse(is.na(alldata$CIMT_LeftMean[i]) & is.na(alldata$CIMT_RightMean[i]),NA,max(alldata$CIMT_LeftMean[i],alldata$CIMT_RightMean[i],na.rm = TRUE))
 }
 
-# for PWV, PWA, BD, average per person
-pwv_mean <- aggregate(pwv[,c("MeanHeartRate","MeanPulseWaveVelocity")],by=list(pwv$StudyID),mean,na.rm=TRUE)
-colnames(pwv_mean) <- c("StudyID","MeanHeartRate","MeanPulseWaveVelocity")
-pwv_mean <- pwv_mean[!is.na(pwv_mean$MeanHeartRate),]
-
-pwa_mean <- aggregate(pwa[,c("C_Ap","C_Ph","C_Agph")],by=list(pwa$StudyID),mean,na.rm=TRUE)
-colnames(pwa_mean) <- c("StudyID","C_Ap","C_Ph","C_Agph")
-pwa_mean <- pwa_mean[!is.na(pwa_mean$C_Ph),]
-
-bd_mean <- aggregate(BrachD[,"BA.Distensibility....mmHg."],by=list(BrachD$StudyID),mean,na.rm=TRUE)
-colnames(bd_mean) <- c("StudyID","BA_Distensibilty")
-bd_mean <- bd_mean[!is.na(bd_mean$BA_Distensibilty),]
-
-# merge data by StudyID
-alldata <- merge(cat,pwa_mean,by="StudyID",all.x=TRUE,all.y=TRUE)
-alldata <- merge(alldata,pwv_mean,by="StudyID",all.x=TRUE,all.y=TRUE)
-alldata <- merge(alldata,bd_mean,by="StudyID",all.x=TRUE,all.y=TRUE)
-alldata <- merge(alldata,cIMT,by="StudyID",all.x=TRUE,all.y=TRUE)
-alldata[alldata$StudyID=="",] <- NA
-alldata <- alldata[!is.na(alldata$StudyID),]
-
-# results that don't match data collection sheet
-check <- alldata[is.na(alldata$AStatus),]
-write.csv(check,"S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\check.csv")
-
-# currently there is one ppt with Group.Status="N" - take them out for now
-alldata$Group.Status <- alldata$AStatus
-alldata <- alldata[alldata$Group.Status=="A" | alldata$Group.Status=="B",]
-alldata$Group.Status <- factor(alldata$Group.Status)
-
 # some people have 0 values for BD, set to missing
-alldata$BA_Distensibilty[alldata$BA_Distensibilty==0] <- NA
-
-# get rid of people missing all data 
-alldata <- alldata[!is.na(alldata$C_Ap) | !is.na(alldata$C_Ph) | !is.na(alldata$C_Agph) | !is.na(alldata$MeanHeartRate) |
-                     !is.na(alldata$MeanPulseWaveVelocity) | !is.na(alldata$BA_Distensibilty) | !is.na(alldata$cIMT),]
+alldata$BrachD[alldata$BrachD==0] <- NA
 
 # count number of each measure
-n_C_Ap <- nrow(alldata[!is.na(alldata$C_Ap),])
-n_C_Ph <- nrow(alldata[!is.na(alldata$C_Ph),])
-n_C_Agph <- nrow(alldata[!is.na(alldata$C_Agph),])
-n_HR <- nrow(alldata[!is.na(alldata$MeanHeartRate),])
-n_PWV <- nrow(alldata[!is.na(alldata$MeanPulseWaveVelocity),])
-n_BD <- nrow(alldata[!is.na(alldata$BA_Distensibilty),])
+n_Ap <- nrow(alldata[!is.na(alldata$Ap),])
+n_Ph <- nrow(alldata[!is.na(alldata$Ph),])
+n_Agph <- nrow(alldata[!is.na(alldata$Agph),])
+n_HR <- nrow(alldata[!is.na(alldata$HR),])
+n_PWV <- nrow(alldata[!is.na(alldata$PWV),])
+n_BD <- nrow(alldata[!is.na(alldata$BrachD),])
 n_cIMT <- nrow(alldata[!is.na(alldata$cIMT),])
+
+# now classify as normal/abnormal
+alldata$cIMT_abnormal <- ifelse(is.na(alldata$cIMT),NA,ifelse(alldata$cIMT>1,1,0))
+alldata$PWV_abnormal <- ifelse(is.na(alldata$PWV),NA,
+                               ifelse(alldata$AgeV1>=30 & alldata$AgeV1<40 & alldata$PWV>6.47,1,
+                                      ifelse(alldata$AgeV1>=40 & alldata$AgeV1<50 & alldata$PWV>7.03,1,
+                                             ifelse(alldata$AgeV1>=50 & alldata$AgeV1<60 & alldata$PWV>8.33,1,
+                                                    ifelse(alldata$AgeV1>=60 & alldata$AgeV1<70 & alldata$PWV>8.68,1,
+                                                    ifelse(alldata$AgeV1>=70 & alldata$AgeV1<80 & alldata$PWV>9.76,1,0))))))
+alldata$BrachD_abnormal <- ifelse(is.na(alldata$BrachD) | is.na(alldata$RaceVal %notin% c("White","Black or African American")),NA,
+                              ifelse(alldata$RaceVal=="White" & alldata$Gender=="M" & alldata$BrachD <0.0638),1,
+                                ifelse(alldata$RaceVal=="White" & alldata$Gender=="F" & alldata$BrachD <0.067),1,
+                                  ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="M" & alldata$BrachD <0.060),1,
+                                         ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="F" & alldata$BrachD<0.0625),1,0))))
 
 # labels
 var_label(alldata$cIMT)="cIMT (mm)"
-var_label(alldata$C_Ap)="Augmented Pressure (mmHg)"
-var_label(alldata$C_Agph)="Augmentation Index (%)"
-var_label(alldata$BA_Distensibilty)="Brachial Distensibility (%/mmHg)"
-var_label(alldata$MeanPulseWaveVelocity)="Pulse Wave Velocity (m/s)"
+var_label(alldata$Ap)="Augmented Pressure (mmHg)"
+var_label(alldata$Agph)="Augmentation Index (%)"
+var_label(alldata$BrachD)="Brachial Distensibility (%/mmHg)"
+var_label(alldata$PWV)="Pulse Wave Velocity (m/s)"
 
-myvars <- c("C_Ap","C_Agph","MeanPulseWaveVelocity","BA_Distensibilty","cIMT")
-tab <- CreateTableOne(vars=myvars, strata="Group.Status",data=alldata, test=FALSE)
+myvars <- c("Ap","Agph","PWV","BrachD","cIMT")
+tab <- CreateTableOne(vars=myvars, strata="AStatus",data=alldata, test=FALSE)
 tab <- print(tab,varLabels=TRUE)
 
 ```
