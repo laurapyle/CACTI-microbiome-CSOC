@@ -47,11 +47,11 @@ alldata$PWV_abnormal <- ifelse(is.na(alldata$PWV),NA,
                                              ifelse(alldata$AgeV1>=50 & alldata$AgeV1<60 & alldata$PWV>8.33,1,
                                                     ifelse(alldata$AgeV1>=60 & alldata$AgeV1<70 & alldata$PWV>8.68,1,
                                                     ifelse(alldata$AgeV1>=70 & alldata$AgeV1<80 & alldata$PWV>9.76,1,0))))))
-alldata$BrachD_abnormal <- ifelse(is.na(alldata$BrachD) | is.na(alldata$RaceVal %notin% c("White","Black or African American")),NA,
-                              ifelse(alldata$RaceVal=="White" & alldata$Gender=="M" & alldata$BrachD <0.0638),1,
-                                ifelse(alldata$RaceVal=="White" & alldata$Gender=="F" & alldata$BrachD <0.067),1,
-                                  ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="M" & alldata$BrachD <0.060),1,
-                                         ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="F" & alldata$BrachD<0.0625),1,0))))
+alldata$BrachD_abnormal <- ifelse(is.na(alldata$BrachD) | !(alldata$RaceVal %in% c("White","Black or African American")),NA,
+                              ifelse(alldata$RaceVal=="White" & alldata$Gender=="M" & alldata$BrachD <6.38,1,
+                                ifelse(alldata$RaceVal=="White" & alldata$Gender=="F" & alldata$BrachD <6.7,1,
+                                  ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="M" & alldata$BrachD <6,1,
+                                         ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="F" & alldata$BrachD<6.25,1,0)))))
 
 # labels
 var_label(alldata$cIMT)="cIMT (mm)"
