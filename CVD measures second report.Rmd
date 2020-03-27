@@ -20,9 +20,9 @@ library(labelled)
 alldata <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\QOMBE_Blinded32320.csv")
 
 # read in augmentation index file
-ai <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\PWA_Query.csv")
-ai$VisitDate <- ai$StudyDateTime
-ai <- ai[,c("StudyID","StudyDateTime","C_Ai")]
+ai <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\PWA Query.csv")
+ai <- ai[,c("StudyID","AvgOfC_Al")]
+alldata <- merge(alldata,ai,by="StudyID")
 
 # clean up extra rows
 alldata <- alldata[!is.na(alldata$StudyID),] 
@@ -57,6 +57,9 @@ alldata$BrachD_abnormal <- ifelse(is.na(alldata$BrachD) | !(alldata$RaceVal %in%
                                 ifelse(alldata$RaceVal=="White" & alldata$Gender=="F" & alldata$BrachD <6.7,1,
                                   ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="M" & alldata$BrachD <6,1,
                                          ifelse(alldata$RaceVal=="Black or African American" & alldata$Gender=="F" & alldata$BrachD<6.25,1,0)))))
+alldata$cIMT_abnormal <- as.factor(alldata$cIMT_abnormal)
+alldata$PWV_abnormal <- as.factor(alldata$PWV_abnormal)
+alldata$BrachD_abnormal <- as.factor(alldata$BrachD_abnormal)
 
 # labels
 var_label(alldata$cIMT)="cIMT (mm)"
@@ -64,8 +67,11 @@ var_label(alldata$Ap)="Augmented Pressure (mmHg)"
 var_label(alldata$Agph)="Augmentation Index (%)"
 var_label(alldata$BrachD)="Brachial Distensibility (%/mmHg)"
 var_label(alldata$PWV)="Pulse Wave Velocity (m/s)"
+var_label(alldata$cIMT_abnormal)="cIMT abnormal"
+var_label(alldata$PWV_abnormal)="PWV abnormal"
+var_label(alldata$BrachD_abnormal)="BrachD abnormal"
 
-myvars <- c("Ap","Agph","PWV","BrachD","cIMT")
+myvars <- c("Ap","Agph","PWV","BrachD","cIMT","cIMT_abnormal","PWV_abnormal","BrachD_abnormal")
 tab <- CreateTableOne(vars=myvars, strata="AStatus",data=alldata, test=FALSE)
 tab <- print(tab,varLabels=TRUE)
 
@@ -75,9 +81,19 @@ tab <- print(tab,varLabels=TRUE)
 
 The CACTI Study Clinical Study Oversight Committee (CSOC) is concerned that there may not be enough subclinical cardiovascular disease (CVD) in the non-diabetic group to answer the research question.  The CSOC has requested a closed report with means and standard deviations of all CVD measures, stratified by study group, as part of the interim report.  This table should be developed and provided by a blinded statistician.
 
+In this second version of the report, the prevalence of abnormal values of cIMT, PWV, and brachial distensibility have been added to the report.  The definitions of abnormal values are described in the methods section.  We were unable to identify clear criteria for abnormal augmentation index in the literature.
+
 # Methods
 
 The CVD outcomes data were provided to the blinded statistician, along with blinded group memberships.  Participants with at least one CVD measure were included in this report.  For cIMT, the maximum of the left and right sides was used in analysis.  For pulse wave velocity, Augmentation Index, augmented pressure, and brachial distensitiblity, the mean of a participant's multiple measures was used in analysis.
+
+The criteria for abnormal values of cIMT, PWV, and brachial distensibility were defined as follows:
+
+1) cIMT greater than 1 mm, per Boulous et al.
+
+2) PWV above the upper limit of the 95% confidence interval by age group as reported in Diaz et al.
+
+3) Brachial distensibility below the lower limit of the 95% confidence interval by sex and race as reported in Urbina et al.
 
 Participants were stratified by group and descriptive statistics were calculated.
 
@@ -88,3 +104,11 @@ Table 1 provides descriptive statistics for the CVD measures, by blinded study g
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
 kableone(tab,caption="Table 1.  Descriptive statistics for CVD measures, by blinded study group.")
 ```
+
+# References
+
+Boulous NM, et al.  Carotid plaque characterization, stenosis, and intima-media thickness according to age and gender in a large registry cohort.  Am J Cardiol 2016, 117(7): 1185-1191. 
+
+Diaz A, et al.  Reference values of pulse wave velocity in healthy people from an urban and rural Argentinean population.  International Journal of Hypertension 2014, doi: 10.1155/2014/653239.
+
+Urbina EM, et al.  Brachial artery distensibility and relation to cardiovascular disease risk factor in healthy young adults (the Bogalusa Heart Study).  Am J Cardiol 2002, 89: 946-951.
