@@ -19,6 +19,11 @@ library(labelled)
 # read in Janet's combined file
 alldata <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\QOMBE_Blinded32320.csv")
 
+# read in augmentation index file
+ai <- read.csv("S:\\Shared Projects\\Laura\\BDC\\Projects\\CACTI\\CACTI oral microbiome\\Blinded CSOC report #2\\Data\\PWA_Query.csv")
+ai$VisitDate <- ai$StudyDateTime
+ai <- ai[,c("StudyID","StudyDateTime","C_Ai")]
+
 # clean up extra rows
 alldata <- alldata[!is.na(alldata$StudyID),] 
 
